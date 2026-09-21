@@ -19,7 +19,7 @@
  * Difficulty: 1
  */
 int bitAnd(int x, int y) {
-    return 2;
+    return ~(~x | ~y);
 }
 
 /*
@@ -30,7 +30,7 @@ int bitAnd(int x, int y) {
  *   Difficulty: 1
  */
 int bitXor(int x, int y) {
-    return 2;
+    return ~(~x & ~y) & ~(x & y);
 }
 
 /*
@@ -50,7 +50,7 @@ int bitXor(int x, int y) {
  *   1 if x and y have the same sign , 0 otherwise.
  */
 int samesign(int x, int y) {
-    return 2;
+    return ~((x ^ y) >> 31) & ~((!!x) ^ (!!y));
 }
 
 /*
@@ -63,7 +63,16 @@ int samesign(int x, int y) {
  *   Difficulty: 4
  */
 int logtwo(int v) {
-    return 2;
+    int v16 = ((v >> 16) > 0) << 4;
+    v = v >> v16;
+    int v8 = ((v >> 8) > 0) << 3;
+    v = v >> v8;
+    int v4 = ((v >> 4) > 0) << 2;
+    v = v >> v4;
+    int v2 = ((v >> 2) > 0) << 1;
+    v = v >> v2;
+    int v1 = ((v >> 1) > 0) << 0;
+    return v16 + v8 + v4 + v2 + v1;
 }
 
 /*
@@ -76,7 +85,10 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+    int byte_n = (x >> (n << 3)) & 0xFF;
+    int byte_m = (x >> (m << 3)) & 0xFF;
+    int mask = ((0xFF << (n << 3)) | (0xFF << (m << 3)));
+    return (x & ~mask) | (byte_n << (m << 3)) | (byte_m << (n << 3));
 }
 
 /*
@@ -88,7 +100,16 @@ int byteSwap(int x, int n, int m) {
  *   Difficulty: 3
  */
 unsigned reverse(unsigned v) {
-    return 2;
+    int x = 16;
+    unsigned one = 0x00000001;
+    while(x){
+        unsigned a1 = (v >> (x - 1)) & one;
+        unsigned a2 = (v >> (32 - x)) & one;
+        unsigned mask = (one << (x - 1)) | (one << (32 - x));
+        v = (v & ~mask) | (a1 << (32 - x)) | (a2 << (x - 1));
+        x--;
+    }
+    return v;
 }
 
 /*
@@ -100,7 +121,7 @@ unsigned reverse(unsigned v) {
  *   Difficulty: 3
  */
 int logicalShift(int x, int n) {
-    return 2;
+    return (x >> n) & ~(((1u << 31) >> n) << 1);
 }
 
 /*
@@ -112,7 +133,19 @@ int logicalShift(int x, int n) {
  *   Difficulty: 4
  */
 int leftBitCount(int x) {
-    return 2;
+    int ans = 16;
+    int x16 = !((~(x >> ans)) & 0xFFFF) << 4;
+    ans = ans + 9 + ~x16;
+    int x8 = !((~(x >> ans)) & 0xFF) << 3;
+    ans = ans + 5 + ~x8;
+    int x4 = !((~(x >> ans)) & 0xF) << 2;
+    ans = ans + 3 + ~x4;
+    int x2 = !((~(x >> ans)) & 0x3) << 1;
+    ans = ans + 2 + ~x2;
+    int x1 = !((~(x >> ans)) & 0x1);
+    ans = ans + 1 + ~x1;
+    int x0 = !((~(x >> ans)) & 0x1);
+    return 32 + ~ans + x0;
 }
 
 /*
