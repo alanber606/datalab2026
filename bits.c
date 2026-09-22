@@ -157,7 +157,31 @@ int leftBitCount(int x) {
  *   Difficulty: 4
  */
 unsigned float_i2f(int x) {
-    return 2;
+    unsigned sign, absx, exp, frac, guard;
+    int shift;
+
+    if (x == 0)
+        return 0;
+    sign = x & 0x80000000;
+    absx = x;
+    if (x < 0)
+        absx = ~x + 1;
+    shift = 0;
+    while (!(absx & 0x80000000)) {
+        absx <<= 1;
+        shift += 1;
+    }
+    exp = 127 + (31 - shift);
+    frac = (absx >> 8) & 0x7FFFFF;
+    guard = absx & 0xFF;
+    if ((guard > 0x80) | ((guard == 0x80) & (frac & 1))) {
+        frac += 1;
+        if (frac == 0x800000) {
+            frac = 0;
+            exp += 1;
+        }
+    }
+    return sign | (exp << 23) | frac;
 }
 
 /*
@@ -172,7 +196,24 @@ unsigned float_i2f(int x) {
  *   Difficulty: 4
  */
 unsigned floatScale2(unsigned uf) {
-    return 2;
+    unsigned sign = uf & 0x80000000;
+    unsigned exp = (uf >> 23) & 0xFF;
+    unsigned frac = uf & 0x7FFFFF;
+    if(exp == 0xFF) {
+        return uf;
+    } else if(exp == 0) {
+        frac <<= 1;
+        if(frac & 0x800000) {
+            exp = 1;
+            frac &= 0x7FFFFF;
+        }
+    } else {
+        exp += 1;
+        if(exp == 0xFF) {
+            frac = 0;
+        }
+    }
+    return sign | (exp << 23) | frac;
 }
 
 /*
@@ -189,7 +230,32 @@ unsigned floatScale2(unsigned uf) {
  *   Difficulty: 3
  */
 int float64_f2i(unsigned uf1, unsigned uf2) {
-    return 2;
+    unsigned sign = uf2 >> 31;
+    unsigned exp = (uf2 >> 20) & 0x7FF;
+    unsigned frac1 = uf2 & 0xFFFFF;
+    if(exp == 0x7FF) {
+        return 0x80000000;
+    }
+    if(exp < 1023) {
+        return 0;
+    }
+    int E = exp - 1023;
+    if(E >= 31) {
+        return 0x80000000;
+    }
+    unsigned num1 = (1 << 20) | frac1;
+    int ans = 0;
+    if(E > 20) {
+        num1 <<= (E - 20);
+        ans = num1 | (uf1 >> (32 - (E - 20)));
+    } else {
+        num1 >>= (20 - E);
+        ans = num1;
+    }
+    if(sign) {
+        ans = -ans;
+    }
+    return ans;
 }
 
 /*
@@ -206,5 +272,13 @@ int float64_f2i(unsigned uf1, unsigned uf2) {
  *   Difficulty: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    if(x < -149) {
+        return 0;
+    } else if(x <= -127) {
+        return 1 << (x + 149);
+    } else if(x <= 127) {
+        return (x + 127) << 23;
+    } else {
+        return 0x7F800000;
+    }
 }
