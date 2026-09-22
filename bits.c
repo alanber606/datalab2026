@@ -50,7 +50,7 @@ int bitXor(int x, int y) {
  *   1 if x and y have the same sign , 0 otherwise.
  */
 int samesign(int x, int y) {
-    return ~((x ^ y) >> 31) & ~((!!x) ^ (!!y));
+    return !((x ^ y) >> 31) & !((!!x) ^ (!!y));
 }
 
 /*
@@ -72,7 +72,7 @@ int logtwo(int v) {
     int v2 = ((v >> 2) > 0) << 1;
     v = v >> v2;
     int v1 = ((v >> 1) > 0) << 0;
-    return v16 + v8 + v4 + v2 + v1;
+    return v16 | v8 | v4 | v2 | v1;
 }
 
 /*
@@ -85,10 +85,12 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    int byte_n = (x >> (n << 3)) & 0xFF;
-    int byte_m = (x >> (m << 3)) & 0xFF;
-    int mask = ((0xFF << (n << 3)) | (0xFF << (m << 3)));
-    return (x & ~mask) | (byte_n << (m << 3)) | (byte_m << (n << 3));
+    int sn = n << 3;
+    int sm = m << 3;
+    int byte_n = (x >> sn) & 0xFF;
+    int byte_m = (x >> sm) & 0xFF;
+    int mask = ((0xFF << sn) | (0xFF << sm));
+    return (x & ~mask) | (byte_n << sm) | (byte_m << sn);
 }
 
 /*
@@ -121,7 +123,7 @@ unsigned reverse(unsigned v) {
  *   Difficulty: 3
  */
 int logicalShift(int x, int n) {
-    return (x >> n) & ~(((1u << 31) >> n) << 1);
+    return (x >> n) & (~0u >> n);
 }
 
 /*
@@ -233,7 +235,7 @@ int float64_f2i(unsigned uf1, unsigned uf2) {
     unsigned sign = uf2 >> 31;
     unsigned exp = (uf2 >> 20) & 0x7FF;
     unsigned frac1 = uf2 & 0xFFFFF;
-    if(exp == 0x7FF) {
+    if(exp >= 0x7FF) {
         return 0x80000000;
     }
     if(exp < 1023) {
